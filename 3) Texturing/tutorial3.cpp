@@ -4,10 +4,11 @@
 #include "Renderer.h"
 
 int main() {
-	Window w("Texturing!", 800,600,false);	 //This is all boring win32 window creation stuff!
-	if(!w.HasInitialised()) {
+	Window w("Texturing!", 800, 600, false);	 //This is all boring win32 window creation stuff!
+	if (!w.HasInitialised()) {
 		return -1;
 	}
+
 	
 	Renderer renderer(w);	//This handles all the boring OGL 3.2 initialisation stuff, and sets up our tutorial!
 	if(!renderer.HasInitialised()) {

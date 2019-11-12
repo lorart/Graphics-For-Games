@@ -3,7 +3,10 @@
 #include "../../nclGL/window.h"
 #include "Renderer.h"
 
+
+
 int main() {
+	Camera camera();
 	Window w("Vertex Transformation!",800,600,false);
 	if(!w.HasInitialised()) {
 		return -1;
@@ -52,6 +55,10 @@ int main() {
 		renderer.SetRotation(rotation);
 		renderer.SetScale(scale);
 		renderer.SetPosition(position);
+		renderer.RenderScene();
+
+
+		renderer.UpdateScene(w.GetTimer() -> GetTimedMS());
 		renderer.RenderScene();
 	}
 

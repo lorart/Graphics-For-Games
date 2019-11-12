@@ -78,6 +78,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Renderer.h" />
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Tutorial 01 - Your First Triangle.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="basicVertex.glsl" />
+    <None Include="colourFragment.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

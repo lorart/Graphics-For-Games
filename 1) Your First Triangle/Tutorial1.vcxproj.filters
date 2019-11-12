@@ -22,5 +22,19 @@
     <ClInclude Include="Renderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Tutorial 01 - Your First Triangle.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="basicVertex.glsl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="colourFragment.glsl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
 </Project>
