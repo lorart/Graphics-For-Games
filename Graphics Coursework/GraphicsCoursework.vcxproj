@@ -40,7 +40,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IncludePath>..\..\GLEW\include;..\..\SOIL;..\nclgl;$(IncludePath)</IncludePath>
-    <LibraryPath>..\..\GLEW\lib;..\..\SOIL\$(Configuration);..\$(Configuration)\;..\..\nclgl\$(Configuration)\;$(LibraryPath)</LibraryPath>
+    <LibraryPath>..\..\GLEW\lib\$(Configuration);..\..\SOIL\$(Configuration)\;..\$(Configuration)\;$(LibraryPath)</LibraryPath>
+    <ExecutablePath>$(VC_ExecutablePath_x86);$(WindowsSDK_ExecutablePath);$(VS_ExecutablePath);$(MSBuild_ExecutablePath);$(SystemRoot)\SysWow64;$(FxCopDir);$(PATH);</ExecutablePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>..\..\GLEW\include;..\..\SOIL\;..\nclgl;$(IncludePath)</IncludePath>
@@ -69,6 +70,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="House.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="UFO.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="House.h" />
+    <ClInclude Include="Renderer.h" />
+    <ClInclude Include="UFO.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

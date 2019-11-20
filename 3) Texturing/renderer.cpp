@@ -4,9 +4,9 @@ Renderer::Renderer(Window& parent): OGLRenderer(parent) {
 	triangle = Mesh::GenerateTrangle();
 	triangle->SetTexture(SOIL_load_OGL_texture(TEXTUREDIR"brick.tga",SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, 0)); 	if (!triangle->GetTexture()) {		return;	}
 
-	currentShader = new Shader(SHADERDIR"TexturedVertex.glsl", SHADERDIR "texturedfragment.glsl");
+	currentshader = new Shader(SHADERDIR"TexturedVertex.glsl", SHADERDIR "texturedfragment.glsl");
 
-	if (!currentShader->LinkProgram()) { return; }
+	if (!currentshader->LinkProgram()) { return; }
 
 	init = true;
 	projMatrix = Matrix4::Orthographic(-1, 1, 1, -1, 1, -1);
@@ -22,12 +22,12 @@ Renderer::~Renderer(void) {
 
 void Renderer::RenderScene() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//each fame need to clean and update
-	glUseProgram(currentShader->GetProgram());
+	glUseProgram(currentshader->GetProgram());
 	
 	UpdateShaderMatrices();//each fame need to clean and update
 
 
-	glUniform1i(glGetUniformLocation(currentShader -> GetProgram(),"diffuseTex"), 0);//1i means int
+	glUniform1i(glGetUniformLocation(currentshader -> GetProgram(),"diffuseTex"), 0);//1i means int
 
 	
 
@@ -48,8 +48,8 @@ void Renderer::UpdateTextureMatrix(float value)
 
 }
 
-void Renderer::ToggleRepeating() {
-	filtering = !repeating;
+void Renderer::ToggleRepeating() {//是否重复贴图
+	repeating = !repeating;
 	glBindTexture(GL_TEXTURE_2D, triangle->GetTexture());
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, repeating ? GL_REPEAT : GL_CLAMP);  //x axis
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, repeating ? GL_REPEAT : GL_CLAMP); //y axis 
@@ -58,7 +58,7 @@ void Renderer::ToggleRepeating() {
 
 
 
-void Renderer::ToggleFiltering() {//切换过滤 //?
+void Renderer::ToggleFiltering() {//切换边界蒙版
 	filtering = !filtering;
 	glBindTexture(GL_TEXTURE_2D, triangle->GetTexture());
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,filtering ? GL_LINEAR : GL_NEAREST);

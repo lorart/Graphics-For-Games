@@ -11,9 +11,9 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	if (!textures[0] || !textures[1]) {  return;  } 
 	positions[0] = Vector3(0, 0, -5); //5units away from the viewpoint 
 	 positions[1] = Vector3(0,0,-5);
-	 currentShader = new Shader(SHADERDIR"TexturedVertex.glsl",  SHADERDIR"TexturedFragment.glsl");
+	 currentshader = new Shader(SHADERDIR"TexturedVertex.glsl",  SHADERDIR"TexturedFragment.glsl");
 
-	if (!currentShader->LinkProgram()) {
+	if (!currentshader->LinkProgram()) {
 		return;
 	}
 	usingDepth = false;
@@ -35,18 +35,18 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 
  void Renderer::RenderScene() {
 	 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//clear
-	 glUseProgram(currentShader->GetProgram());//use  program
+	 glUseProgram(currentshader->GetProgram());//use  program
 
-	 glUniformMatrix4fv(glGetUniformLocation(currentShader->GetProgram(), "textureMatrix"), 1, false, (float*)& textureMatrix);//
-	 glUniformMatrix4fv(glGetUniformLocation(currentShader->GetProgram(), "viewMatrix"), 1, false, (float*)& viewMatrix);
-	 glUniformMatrix4fv(glGetUniformLocation(currentShader->GetProgram(), "projMatrix"), 1, false, (float*)& projMatrix);
+	 glUniformMatrix4fv(glGetUniformLocation(currentshader->GetProgram(), "textureMatrix"), 1, false, (float*)& textureMatrix);//
+	 glUniformMatrix4fv(glGetUniformLocation(currentshader->GetProgram(), "viewMatrix"), 1, false, (float*)& viewMatrix);
+	 glUniformMatrix4fv(glGetUniformLocation(currentshader->GetProgram(), "projMatrix"), 1, false, (float*)& projMatrix);
 
-	 glUniform1i(glGetUniformLocation(currentShader->GetProgram(), "diffuseTex"), 0);
+	 glUniform1i(glGetUniformLocation(currentshader->GetProgram(), "diffuseTex"), 0);
 
 	 glActiveTexture(GL_TEXTURE0);//ACTIVE THE NO.0 TEXTURE //?
 
 	 for (unsigned int i = 0; i < 2; ++i) {
-		 glUniformMatrix4fv(glGetUniformLocation(currentShader->GetProgram(), "modelMatrix"), 1, false, (float*)& Matrix4::Translation(positions[i]));//?
+		 glUniformMatrix4fv(glGetUniformLocation(currentshader->GetProgram(), "modelMatrix"), 1, false, (float*)& Matrix4::Translation(positions[i]));//?
 		 glBindTexture(GL_TEXTURE_2D, textures[i]);
 		 meshes[i]->Draw();
 	 }

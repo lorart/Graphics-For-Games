@@ -14,8 +14,9 @@ public:
 	virtual void UpdateScene(float msec);
 
 protected:
-	MD5FileData*hellData;
+	MD5FileData* hellData;
 	MD5Node*	hellNode;
 	Camera*		camera;
 };
+
 

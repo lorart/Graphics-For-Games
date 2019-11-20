@@ -3,9 +3,9 @@
 Renderer::Renderer(Window& parent) :OGLRenderer(parent) {
 	triangle = Mesh::GenerateTrangle();
 	quad = Mesh::GenerateQuad();
-	currentShader = new Shader(SHADERDIR"TexturedVertex.glsl", 
+	currentshader = new Shader(SHADERDIR"TexturedVertex.glsl", 
 		 SHADERDIR"StencilFragment.glsl");
-	if (!currentShader->LinkProgram()) {
+	if (!currentshader->LinkProgram()) {
 		 return;
 		  } 
 	 triangle->SetTexture(SOIL_load_OGL_texture(TEXTUREDIR"brick.tga",  SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, 0));
@@ -40,10 +40,10 @@ void Renderer::ToggleScissor() {
 		 glScissor((float)width/2.5f,(float)height/2.5f, (float)width / 5.0f, (float)height / 5.0f);//start location x,y,width,height
 	 }
 
-	 glUseProgram(currentShader->GetProgram());
+	 glUseProgram(currentshader->GetProgram());
 	 UpdateShaderMatrices();
 
-	 glUniform1i(glGetUniformLocation(currentShader->GetProgram(), "diffuseTex"), 0);
+	 glUniform1i(glGetUniformLocation(currentshader->GetProgram(), "diffuseTex"), 0);
 
 	 if (usingStencil) {
 		 glEnable(GL_STENCIL_TEST);

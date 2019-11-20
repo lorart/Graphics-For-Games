@@ -11,10 +11,11 @@ int main() {
 
 	Renderer renderer(w);
 	if(!renderer.HasInitialised()) {
+		cout << "HasInitialised false" << endl;
 		return -1;
 	}
 
-	w.LockMouseToWindow(true);
+  w.LockMouseToWindow(true);
 	w.ShowOSPointer(false);
 
 	while(w.UpdateWindow() && !Window::GetKeyboard()->KeyDown(KEYBOARD_ESCAPE)){
