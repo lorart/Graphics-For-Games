@@ -22,6 +22,8 @@ public:
 	void LoadScene(std::string OBJname);
 	virtual void RenderScene();
 	 void MoveLight(float msec);
+	 void UpdateHeightmap(float msec);
+
 	
 
 
@@ -35,6 +37,9 @@ protected:
 	void DrawShadowScene();
 	void DrawCombinedScene();
 	void DrawLighting();
+	void DrawFloor();
+
+
 
 	void RendererWater();
 	void RendererLoader(Mesh* mesh, Shader* shader_Program, string vertex_shader, string Fragment_shader, string D_texture_name,string N_texture_name,  bool texture_repeat);
@@ -47,10 +52,14 @@ protected:
 	Shader* shadowShader;
 	Shader* peopleShader;
 	Shader* lightingShader;
+	Shader* mapShader;
+
 
 	HeightMap* heightMap;
 	Mesh* quad;
 	Mesh* lighting;
+	Mesh* floor;
+	Mesh* map;
 
 
 	MD5FileData* hellData;
@@ -60,14 +69,31 @@ protected:
 	SceneNode* root;
 
 	Camera* camera;
+	Camera* mapcamera;
 	Light* light;
 
 	GLuint cubeMap;
 	GLuint shadowTex;
 	GLuint shadowFBO;
 
+
+	GLuint miniMapTex;
+	GLuint miniMapFBO;
+	void DrawMiniMapFBO();
+	void DrawMiniMap();
+	Mesh* miniMapQuad;
+	GLuint miniMapDepthTex;
+
 	float waterRotate;
 	float skyRotate;
-	bool autolight=TRUE;
+	float timeValue ;
 
+
+
+	bool autolight=TRUE;
+	bool usingMap=TRUE;
+
+
+
+	
 };

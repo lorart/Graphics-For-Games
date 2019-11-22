@@ -13,7 +13,12 @@ public:	 House(void);
 		  housemesh = m;
 
 	  }
-	  static void DeleteHouse() { delete housemesh; }
+	  static void DeleteHouse() { 
+		  if (housemesh)
+		  {
+			  delete housemesh;
+		  }
+		  }
 	  
 protected:
 	static Mesh* housemesh;

@@ -3,6 +3,7 @@
 #include "string.h"
 Renderer::Renderer(Window& parent) :OGLRenderer(parent) {
 	camera = new Camera();
+	mapcamera = new Camera();
 	
 #pragma region house
 	House::CreateHouse();
@@ -25,14 +26,14 @@ Renderer::Renderer(Window& parent) :OGLRenderer(parent) {
 
 	lightingShader = new Shader(SHADERDIR"lightingVertex.glsl",
 		SHADERDIR "lightingFragment.glsl");
-	/*reflectShader = new Shader(SHADERDIR"PerPixelVertex.glsl", SHADERDIR "reflectFragment.glsl");*/
+	//reflectShader = new Shader(SHADERDIR"PerPixelVertex.glsl", SHADERDIR "reflectFragment.glsl");
 	if (!lightingShader->LinkProgram()) {
 		return;
 	}
 
 	lighting->SetTexture(SOIL_load_OGL_texture(TEXTUREDIR "lighting.jpg",
 		SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS));
-	lighting->GenerateNormals();
+	//lighting->GenerateNormals();
 
 
 	if (!lighting->GetTexture() ) {
@@ -58,8 +59,12 @@ Renderer::Renderer(Window& parent) :OGLRenderer(parent) {
 	RendererLoader(quad, reflectShader, "PerPixelVertex.glsl", "reflectFragment.glsl", "water.tga", "water.jpg", 1);*/
 
 #pragma region Hightmap
+	timeValue = 0;
+	
 	heightMap = new HeightMap(TEXTUREDIR "/terrain.raw");
-	lightShader = new Shader(SHADERDIR "PerPixelVertex.glsl",
+	/*lightShader = new Shader(SHADERDIR "PerPixelVertex.glsl",
+		SHADERDIR "PerPixelFragment.glsl");*/
+	lightShader = new Shader(SHADERDIR "PerPixelVertexTimeUpdate.glsl",
 		SHADERDIR "PerPixelFragment.glsl");
 
 
@@ -78,7 +83,7 @@ Renderer::Renderer(Window& parent) :OGLRenderer(parent) {
 		return;
 
 	}
-	SetTextureRepeating(heightMap->GetTexture(), true);
+SetTextureRepeating(heightMap->GetTexture(), true);
 
 #pragma endregion
 
@@ -125,36 +130,104 @@ Renderer::Renderer(Window& parent) :OGLRenderer(parent) {
 	glGenFramebuffers(1, &shadowFBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowTex, 0);
+
+
 	glDrawBuffer(GL_NONE);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 #pragma endregion
 
+#pragma region floor
+	floor = Mesh::GenerateQuad();
+	floor->SetTexture(SOIL_load_OGL_texture(TEXTUREDIR"brick.tga", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS));
+	floor->SetBumpMap(SOIL_load_OGL_texture(TEXTUREDIR"brickDOT3.tga", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS));
+#pragma endregion
+
 
 #pragma region people
-//	peopleShader = new Shader(SHADERDIR"skeletonvertex.glsl", SHADERDIR"TexturedFragment.glsl");
-	hellData = new MD5FileData(MESHDIR"hellknight.md5mesh");
-	hellNode = new MD5Node(*hellData);
+//peopleShader = new Shader(SHADERDIR"skeletonvertex.glsl", SHADERDIR"TexturedFragment.glsl");
 
-	hellData->AddAnim(MESHDIR"idle2.md5anim");
-	hellNode->PlayAnim(MESHDIR"idle2.md5anim");
-	peopleShader = new Shader(SHADERDIR "TexturedVertex.glsl",
-		SHADERDIR "TexturedFragment.glsl");
-	if (!peopleShader->LinkProgram()) { 
-		return; 
-	}
+	/*#ifdef MD5_USE_HARDWARE_SKINNING*/
+	/*	currentshader = new Shader(SHADERDIR"skeletonvertex.glsl", SHADERDIR"TexturedFragment.glsl");*/
+	/*#else
+		currentShader = new Shader(SHADERDIR"TexturedVertex.glsl", SHADERDIR"TexturedFragment.glsl");
+	#endif*/
+
+		hellData = new MD5FileData(MESHDIR"hellknight.md5mesh");
+		hellNode = new MD5Node(*hellData);
+	
+
+
+		hellData->AddAnim(MESHDIR"idle2.md5anim");
+		hellNode->PlayAnim(MESHDIR"idle2.md5anim");
+		/*peopleShader = new Shader(SHADERDIR "TexturedVertex.glsl",
+			SHADERDIR "TexturedFragment.glsl");*/
+		peopleShader  = new Shader(SHADERDIR"skeletonvertex.glsl", SHADERDIR"TexturedFragment.glsl");
+		if (!peopleShader->LinkProgram()) { 
+			return; 
+		}
 
 #pragma endregion
 
+#pragma region map
+		//map= Mesh::GenerateQuad();
+		mapShader= new Shader(SHADERDIR"MapVertex.glsl", SHADERDIR"MapFragment.glsl");
+
+		miniMapQuad = Mesh::GenerateMiniQuad();
+	
+
+
+		if (!mapShader->LinkProgram() ) {
+			return;
+		}
+	
+		/*glGenTextures(1, &miniMapDepthTex);
+		glBindTexture(GL_TEXTURE_2D, miniMapDepthTex);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, width, height,
+			0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);*/
+
+		// Generate our map texture ...
+		glGenTextures(1, &miniMapTex);
+	
+		glBindTexture(GL_TEXTURE_2D, miniMapTex);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, width, height,
+			0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
+
+
+
+		glGenFramebuffers(1, &miniMapFBO);
+		glBindFramebuffer(GL_FRAMEBUFFER, miniMapFBO);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, miniMapTex, 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, miniMapTex, 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, miniMapTex, 0);
+
+
+
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+			return;
+		}
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+#pragma endregion
 
 
 
 	projMatrix = Matrix4::Perspective(1.0f, 10000.0f, (float)width / (float)height, 45.0f);
 	camera->SetPosition(Vector3(1000.0f, 500.0f, 1000.0f));
-
+	mapcamera->SetPosition(Vector3(1000.0f, 500.0f, 1000.0f));
 
 
 #pragma region light
-	light = new Light(Vector3(2000, 800,2000), Vector4(1, 1, 1, 300), 8000.0);
+	light = new Light(Vector3(2000, 800,2000), Vector4(1, 0.8, 0.8, 300), 8000.0);
 
 #pragma endregion 
 
@@ -172,27 +245,49 @@ Renderer::Renderer(Window& parent) :OGLRenderer(parent) {
 
 Renderer::~Renderer(void) {
 	delete heightMap;
+
 	delete root;
-	House::DeleteHouse();
+	//House::DeleteHouse();
+
 	delete quad;
+
 	delete light;
+
 	delete camera;
+
 	delete reflectShader;
 	delete skyboxShader;
 	delete lightShader;
+
+	delete mapShader;
+	delete map;
+	glDeleteTextures(1, &miniMapTex);
+	glDeleteFramebuffers(1, &miniMapFBO);
+
+
 	delete hellData;
 	delete hellNode;
+	delete floor;
+
 	delete lighting;
+
+	
+
+
 	currentshader = 0;
 }
 
 void Renderer::UpdateScene(float msec) {
 	camera->UpdateCamera(msec);
 	MoveLight(msec);
-	
-	waterRotate += msec / 1000.0f;
-	skyRotate += msec / 1000.0f;
 
+
+	timeValue +=0.005f;
+	cout << "timeValue ="<< abs(sin(timeValue)) <<endl;
+
+	waterRotate += msec / 3000.0f;
+	skyRotate += msec / 1000.0f;
+	DrawHeightmap();
 	viewMatrix = camera->BuildViewMatrix();
 	root->Update(msec);
 
@@ -207,10 +302,13 @@ void Renderer::UpdateScene(float msec) {
 //}
 void Renderer::RenderScene() {
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-	
+		
 	DrawShadowScene();
 	DrawCombinedScene();
-	
+
+	//DrawMap();
+	//PresentMap();
+
 	SwapBuffers();
 
 }
@@ -260,6 +358,62 @@ void Renderer::MoveLight(float msec)
 	
 
 }
+
+//void Renderer::DrawMap()
+//{
+//	glBindFramebuffer(GL_FRAMEBUFFER, miniMapFBO);
+//	//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D, mapTex,0);
+//	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+//
+//	SetCurrentShader(mapShader);
+//	projMatrix = Matrix4::Orthographic(-1, 1, 1, -1, -1, 1);
+//	
+//	
+//
+//
+//	glUniform1i(glGetUniformLocation(currentshader->GetProgram(), "diffuseTex"), 0);
+//	glUniform1i(glGetUniformLocation(currentshader->GetProgram(), "bumpTex"), 1);
+//
+//
+//	glUniform3fv(glGetUniformLocation(currentshader->GetProgram(), "cameraPos"), 1, (float*)&mapcamera->GetPosition());
+//
+//
+//	viewMatrix = mapcamera->BuildViewMatrix();
+//	UpdateShaderMatrices();
+//
+//
+//	DrawMesh();
+//	DrawFloor();
+//	DrawHouse();
+//
+//	//	DrawWater();
+//	DrawHeightmap();
+//
+//
+//	glUseProgram(0);
+//	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+//	glUseProgram(0);
+//
+//	glEnable(GL_DEPTH_TEST);
+//	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
+//
+//}
+//
+//void Renderer::PresentMap()
+//{
+//	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+//	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+//	SetCurrentShader(mapShader);
+//	projMatrix = Matrix4::Orthographic(-1, 1, 1, -1, -1, 1);
+//	viewMatrix.ToIdentity();
+//	UpdateShaderMatrices();
+//	map->SetTexture(miniMapTex);
+//	map->Draw();
+//	glUseProgram(0);
+//
+//}
+
+
 
 void Renderer::DrawHouse()
 {
@@ -357,8 +511,8 @@ void Renderer::DrawWater() {
 
 void Renderer::DrawMesh()
 {
-	SetCurrentShader(reflectShader);
-	//SetCurrentShader(peopleShader);
+	//SetCurrentShader(reflectShader);
+	SetCurrentShader(peopleShader);
 	SetShaderLight(*light);
 	modelMatrix.ToIdentity();
 	//modelMatrix.SetPositionVector(Vector3(2000,100,2000));
@@ -386,7 +540,8 @@ void Renderer::DrawHeightmap(){
 	SetCurrentShader(lightShader);
 	SetShaderLight(*light)
 		;
-
+	glUniform1f(glGetUniformLocation(currentshader->GetProgram(),
+		"time"),abs(sin(timeValue)));
 
 	glUniform3fv(glGetUniformLocation(currentshader->GetProgram(),
 		"cameraPos"), 1, (float*)&camera->GetPosition());
@@ -435,11 +590,22 @@ void Renderer::DrawLighting()
 		"diffuseTex"), 0);
 
 
+	float heightX = (RAW_WIDTH * HEIGHTMAP_X);
+
+	float heightY = 256 * HEIGHTMAP_Y / 3.0f;
+
+	float heightZ = (RAW_HEIGHT * HEIGHTMAP_Z);
 
 	modelMatrix =
-		Matrix4::Translation(Vector3(30,1000,30)) *
-		Matrix4::Scale(Vector3(100,100,100)) *
+		Matrix4::Translation(Vector3(heightX, heightY, heightZ)) *
+		Matrix4::Scale(Vector3(heightX, 1, heightZ)) *
 		Matrix4::Rotation(90, Vector3(1.0f, 0.0f, 0.0f));
+
+
+	//modelMatrix =
+	//	Matrix4::Translation(Vector3(30,1000,30)) *
+	//	Matrix4::Scale(Vector3(100,100,100)) *
+	//	Matrix4::Rotation(90, Vector3(1.0f, 1.0f, 0.0f));
 
 	//textureMatrix = Matrix4::Scale(Vector3(10.0f, 10.0f, 10.0f)) *
 	//	Matrix4::Rotation(waterRotate, Vector3(0.0f, 0.0f, 1.0f));
@@ -457,6 +623,25 @@ void Renderer::DrawLighting()
 }
 
 
+void Renderer::DrawFloor()
+{
+	SetCurrentShader(sceneShader);
+	SetShaderLight(*light);
+	modelMatrix = Matrix4::Translation(Vector3(800, 400, 800))*Matrix4::Rotation(90, Vector3(1, 0, 0)) * Matrix4::Scale(Vector3(200, 200, 1));
+	Matrix4 tempMatrix = textureMatrix * modelMatrix;
+
+	glUniformMatrix4fv(glGetUniformLocation(currentshader->GetProgram(), "textureMatrix"), 1, false, *&tempMatrix.values);
+	glUniformMatrix4fv(glGetUniformLocation(currentshader->GetProgram(), "modelMatrix"), 1, false, *&modelMatrix.values);
+
+	floor->Draw();
+
+	glUseProgram(0);
+}
+
+
+
+
+
 void Renderer::DrawShadowScene()
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
@@ -469,10 +654,12 @@ void Renderer::DrawShadowScene()
 	textureMatrix = biasMatrix * (projMatrix * viewMatrix);
 	UpdateShaderMatrices();
 
-	//DrawHouse();
-	//DrawMesh();
-	//DrawWater();
-	//DrawHeightmap();
+	
+	
+	DrawMesh();
+	
+
+	//DrawLighting();
 
 	glUseProgram(0);
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
@@ -498,18 +685,21 @@ void Renderer::DrawCombinedScene()
 	UpdateShaderMatrices();
 	DrawSkybox();
 
-	/*DrawHouse();
+	
+	
 	DrawMesh();
-	DrawWater();
-	DrawHeightmap();*/
-	DrawLighting();
+	DrawFloor();
+	DrawHouse();
 
+//	DrawWater();
+	DrawHeightmap();
+	//DrawLighting();
+
+
+	
 
 	glUseProgram(0);
 }
-
-
-
 
 
 
@@ -546,8 +736,8 @@ void Renderer::RendererWater()
 		return;
 
 	}
-	quad->GenerateNormals();
-	quad->GenerateTangents();
+//	quad->GenerateNormals();
+//	quad->GenerateTangents();
 	SetTextureRepeating(quad->GetTexture(),1);
 	SetTextureRepeating(quad->GetBumpMap(),1);
 	
@@ -583,3 +773,23 @@ void Renderer::RendererLoader(Mesh* mesh, Shader* shader_Program, string vertex_
 	SetTextureRepeating(mesh->GetTexture(), true);
 }
 
+
+void Renderer::DrawMiniMapFBO() {
+	glBindFramebuffer(GL_FRAMEBUFFER, miniMapFBO);
+	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	SetCurrentShader(mapShader);
+	projMatrix = Matrix4::Perspective(1.0f, 10000.0f, (float)width / (float)height, 45.0f);
+	UpdateShaderMatrices();
+	heightMap->Draw();
+	glUseProgram(0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+
+void Renderer::DrawMiniMap() {
+	SetCurrentShader(mapShader);
+	UpdateShaderMatrices();
+	miniMapQuad->SetTexture(miniMapTex);
+	miniMapQuad->Draw();
+	glUseProgram(0);
+}

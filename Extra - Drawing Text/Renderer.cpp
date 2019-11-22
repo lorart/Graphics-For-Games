@@ -33,9 +33,9 @@ Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 	camera  = new Camera();	//A camera!
 
 	//Again there's no fancy shader stuff, so it's just tutorial 3 again...
-	currentShader = new Shader(SHADERDIR"TexturedVertex.glsl", SHADERDIR"TexturedFragment.glsl");
+	currentshader = new Shader(SHADERDIR"TexturedVertex.glsl", SHADERDIR"TexturedFragmentWord.glsl");
 	
-	if(!currentShader->LinkProgram()) {
+	if(!currentshader->LinkProgram()) {
 		return;
 	}
 	/*
@@ -72,9 +72,9 @@ void Renderer::UpdateScene(float msec)	{
 void Renderer::RenderScene()	{
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);		// Clear Screen And Depth Buffer
 
-	glUseProgram(currentShader->GetProgram());	//Enable the shader...
+	glUseProgram(currentshader->GetProgram());	//Enable the shader...
 	//And turn on texture unit 0
-	glUniform1i(glGetUniformLocation(currentShader->GetProgram(), "diffuseTex"), 0);
+	glUniform1i(glGetUniformLocation(currentshader->GetProgram(), "diffuseTex"), 0);
 
 //Render function to encapsulate our font rendering!
 	DrawText("This is orthographic text!", Vector3(0,0,0), 16.0f);
